@@ -5,7 +5,7 @@ const cors = require("cors");
 const authRoutes = require("./routes/auth.routes");
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 // ✅ ENV CHECK (temporary)
