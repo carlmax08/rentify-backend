@@ -35,52 +35,30 @@ exports.signup = (req, res) => {
 
 
 // ✅ LOGIN (mobile + role check)
-exports.login = async (req, res) => {
-  try {
-    const { mobile, role } = req.body;
+exports.login = (req, res) => {
+  const { mobile } = req.body;
 
-    if (!mobile || !role) {
-      return res.status(400).json({ message: "Mobile and role required" });
+  if (!mobile) {
+    return res.status(400).json({ message: "Mobile required" });
+  }
+
+  db.query("SELECT * FROM users WHERE mobile = ?", [mobile], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ message: "Database error" });
     }
 
-    const validRoles = ["OWNER", "TENANT"];
-    if (!validRoles.includes(role)) {
-      return res.status(400).json({ message: "Invalid role" });
-    }
-
-    // ✅ Find user
-    const [users] = await db.query("SELECT * FROM users WHERE mobile = ?", [
-      mobile,
-    ]);
-
-    if (users.length === 0) {
+    if (rows.length === 0) {
       return res.status(404).json({ message: "User not found" });
-    }
-
-    const user = users[0];
-
-    // ✅ Check role exists for this user
-    const [roles] = await db.query(
-      "SELECT role FROM user_roles WHERE user_id = ? AND role = ?",
-      [user.id, role]
-    );
-
-    if (roles.length === 0) {
-      return res.status(403).json({
-        message: `You are not registered as ${role}`,
-      });
     }
 
     return res.json({
       message: "Login success",
-      user,
-      role,
+      user: rows[0],
     });
-  } catch (err) {
-    console.log("Login error:", err);
-    return res.status(500).json({ message: "Database error" });
-  }
+  });
 };
+
+
 
 // ✅ GET USER ROLES (simple)
 exports.getRoles = async (req, res) => {
